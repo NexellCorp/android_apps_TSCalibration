@@ -74,17 +74,7 @@ public class StartupIntentReceiver extends BroadcastReceiver {
          }
          catch(Exception e){
 		 	
-            Log.e("Calibration Start Up Receiver: EXCEPTION ", e.toString());
-//#if 1//Finedigital
 			Log.i("Calibration Start Up Receiver", "Calibration File Does Not Exist, setting default TS Cal");
-//#else
-            //Log.i("Calibration Start Up Receiver", "Calibration File Does Not Exist, Launching TS Cal");
-
-            //Intent starterIntent = new Intent(context, TouchCalibration.class);
-            //Set launch flags pertaining to M6 release
-            //starterIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            //context.startActivity(starterIntent);
-//#endif
          };
     }
 }

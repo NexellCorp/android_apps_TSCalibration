@@ -31,7 +31,7 @@
     <string name="intro">Touch Screen Calibration: Please follow the steps carefully.</string>
     <string name="instruc">Tap On Red Circle #</string>
 <!--    <string name="cont">Press menu to continue or press back to quit.</string>-->
-	<string name="cont">Press Enter or HOME to continue or press back to quit.</string>
+	<string name="cont">Touch the any screen to start the calibration.</string>
     <string name="complete">Calibration is Complete.</string>
     <string name="quit">Press back to quit.</string>
     <string name="need_reboot1">You have perfomed calibration already</string>

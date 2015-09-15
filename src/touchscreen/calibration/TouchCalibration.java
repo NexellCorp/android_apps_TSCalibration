@@ -83,6 +83,7 @@ public class TouchCalibration extends Activity {
     final private static int STEP_3 = 3;
     final private static int STEP_4 = 4;
     final private static int STEP_5 = 5;
+    final private static int STEP_6 = 6;
     private static int Orientation = 0;
     private static int Rotation = 0;
     private static int Windex = 0;
@@ -107,7 +108,8 @@ public class TouchCalibration extends Activity {
     /*
      * File Creation for storing the calibration file
      */
-    public static final String filePath = "/data/data/touchscreen.calibration/files/pointercal";
+   	public static final String filePath = "/data/data/touchscreen.calibration/files/pointercal";
+    //public static final String filePath = "/data/pointercal";
     private final File calibrationFile = new File(filePath);
     protected FileWriter fileWriter;
 
@@ -147,7 +149,6 @@ public class TouchCalibration extends Activity {
 
 		});
 
-		//	 	SystemProperties.set("tcc.calibration.state","start");
 		SystemProperties.set("persist.calibration.state","start");
 
 		// Get the Text from R.string
@@ -155,11 +156,10 @@ public class TouchCalibration extends Activity {
 		mPreInstruc = getApplicationContext().getString(R.string.instruc);
 
 
-
 		super.setContentView(R.layout.intro);
 		try{
 			byte[] defaultPointercal = new byte[20];
-			String defaultPointercalValues = "1 0 0 0 1 0 1" + "\n";        
+			String defaultPointercalValues = "1 0 0 0 1 0 1" + "\n";
 			defaultPointercal = defaultPointercalValues.getBytes();
 			fos = this.openFileOutput("pointercal", MODE_WORLD_READABLE);
 			fos.write(defaultPointercal);
@@ -177,114 +177,6 @@ public class TouchCalibration extends Activity {
 			super.setContentView(view);
 		}
 
-	/*
-	 * Override onKeyUp to handle button presses
-	 */
-	@Override
-		public boolean onKeyUp(int keyCode, KeyEvent msg) {
-			boolean result = doKeyUp(keyCode, msg);
-
-			if (QUIT && keyCode == KeyEvent.KEYCODE_BACK){
-				// Close and Save File
-				if (fos != null){
-					try{fos.close();}catch(Exception e){
-						Log.d("TAG", "Exception Occured While Trying to Close and Save "
-								+ e.toString());
-					};
-				}
-
-				this.finish();
-				super.finish();
-			}
-			return result;
-		}
-
-	boolean doKeyUp(int keyCode, KeyEvent msg) {
-		boolean handled = false;
-
-		if ((keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_SOFT_LEFT || keyCode == KeyEvent.KEYCODE_HOME)
-				&& STEP == STEP_0){
-			STEP = STEP_1;
-
-			Orientation = getResources().getConfiguration().orientation;
-			Rotation = this.getWindowManager().getDefaultDisplay().getRotation(); 
-
-			super.setContentView(new CalibrationView(this));
-			handled = true;
-
-		}else if (keyCode == KeyEvent.KEYCODE_7 && STEP == STEP_0){
-
-			//Create Default Pointercal File through Java Non-Native function
-			try{
-				byte[] defaultPointercal = new byte[20];
-				String defaultPointercalValues = "1 0 0 0 1 0 1" + "\n";         
-				defaultPointercal = defaultPointercalValues.getBytes();
-				fos = this.openFileOutput("pointercal", MODE_WORLD_READABLE);
-				fos.write(defaultPointercal);
-			}catch (Exception e){
-				Log.e(TAG, "Exception Occured: Trying to default pointercal: " +
-						e.toString());
-				Log.e(TAG, "Finishing the Application");
-				super.finish();
-			}
-
-			//Reading the pointercal File and logging
-			char[] pointercalBuffer = new char[100];
-			String pointercalValues = "";
-			int count;
-			try{
-				FileReader rd = new FileReader(TouchCalibration.filePath);
-				count = rd.read(pointercalBuffer, 0, 100);
-				for (int i = 0; i < count; i++) {
-					pointercalValues += pointercalBuffer[i];
-				}
-
-				Log.i("This is the pointercal", pointercalValues);
-				rd.close();
-			}
-			catch(Exception e){
-				Log.e("TAG", "Unable to read the pointercal file: " + e.toString());
-			}
-
-		}
-		else if (keyCode == KeyEvent.KEYCODE_BACK && !QUIT){
-			new AlertDialog.Builder(this)
-				.setTitle("Confirmation")
-				.setMessage("Quit?")
-				.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int whichButton) {
-						QUIT = true;
-						checkQuit();
-						}
-						})
-			.setNegativeButton("No", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-					// No, hence do nothing
-					}
-					})
-			.show();
-
-			handled = true;
-		}
-		else if (keyCode == KeyEvent.KEYCODE_BACK){
-
-			if (fos != null){
-				try{fos.close();}catch(Exception e){
-					Log.d("TAG", "Exception Occured While Trying to Close and Save "
-							+ e.toString());
-				};
-			}
-
-			//		 SystemProperties.set("tcc.calibration.state","done");
-			SystemProperties.set("persist.calibration.state","done");
-
-			this.finish();
-			super.finish();
-
-
-		}
-		return handled;
-	}
 
 	@Override
 		public void onResume(){
@@ -301,15 +193,34 @@ public class TouchCalibration extends Activity {
 	 */
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		final int eventAction = event.getAction();
+		
+		Log.e(TAG,"Touch event = " + eventAction + "  STEP = " + STEP);
+	/*	
+		if(STEP == STEP_0 ){
+			STEP = STEP_1;
+            Orientation = getResources().getConfiguration().orientation;
+            Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
 
+            super.setContentView(new CalibrationView(this));
+			
+		}
+	*/
 
 		if (eventAction == MotionEvent.ACTION_UP){
+
+	        if(STEP == STEP_0 ){
+            	STEP = STEP_1;
+	            Orientation = getResources().getConfiguration().orientation;
+    	        Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
+
+        	    super.setContentView(new CalibrationView(this));
+				return true;
+        	}
+
 			if (STEP != STEP_0){
 				//Retrieve Data from Event
 				if(Rotation == 0){
-					//mResultPts[(STEP -1) * mPtsLength] = event.getRawX();
 					mResultPts[(STEP -1) * mPtsLength] = event.getX();
-					//mResultPts[(STEP -1) * mPtsLength + 1] = event.getRawY();
 					mResultPts[(STEP -1) * mPtsLength + 1] = event.getY();
 				}
 				else if(Rotation == 1){
@@ -370,33 +281,6 @@ public class TouchCalibration extends Activity {
 								+ Integer.toString((int)mPts[i]));
 						Log.i(TAG+" debug", "refY[" + Integer.toString(i)+ "] is="
 								+ Integer.toString((int)mPts[i+1]));
-						/* 
-						   if( (mResultPts[i] - mPts_ref[i]) > CalThreshold || (mResultPts[i] - mPts_ref[i]) < -CalThreshold  ||
-						   (mResultPts[i+1] - mPts_ref[i+1]) > CalThreshold || (mResultPts[i+1] - mPts_ref[i+1]) < -CalThreshold )
-						   {
-						   Log.e(TAG,"woing position?? try again.");
-						   Log.e(TAG,"mResultPts[i] = " + mResultPts[i] + " mPts[i] = " + mPts[i]);
-						   Log.e(TAG,"mResultPts[i+1] = " + mResultPts[i+1] + " mPts[i+1] = " + mPts[i+1]);
-
-
-						   if(CalRetryNum > 0)
-						   {
-						   new AlertDialog.Builder(this)
-						   .setTitle("Notice")
-						   .setMessage("Try again")
-						   .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-						   public void onClick(DialogInterface dialog, int whichButton) {
-						   }
-						   }).show();
-						   CalRetryNum--;
-						   QUIT = false;
-						   STEP = STEP_0;
-						   super.setContentView(R.layout.intro);
-						   super.onResume();				
-						   return false;
-						   }
-						   }
-						 */
 					}
 
 					try{
