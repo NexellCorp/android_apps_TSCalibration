@@ -66,9 +66,10 @@ public class TouchCalibration extends Activity {
 
     //From TSLIB (libts.so)
     public static native int calibrateAndroid(int incomingCoords[]);
-    public static String defaultPointercalValues = "1 0 0 0 1 0 1" + "\n";
+	public static String defaultPointercalValues = "1 0 0 0 1 0 1" + "\n";
 
-    final private static boolean DEBUG = true;
+    final private static boolean DEBUG = false;
+    final private static boolean CHK_PTS = false;
 
     private static String mQuitString;
     private static String mPreInstruc;
@@ -97,6 +98,7 @@ public class TouchCalibration extends Activity {
     private static float[] mResultPts = new float[mPtCount * mPtsLength];
     private static float[] tempPts = new float[mPtsLength];
 
+	private static boolean confirm = false;
     private static boolean QUIT = false;
     private static int STEP = STEP_0;
 
@@ -154,7 +156,6 @@ public class TouchCalibration extends Activity {
 		mQuitString = getApplicationContext().getString(R.string.quit);
 		mPreInstruc = getApplicationContext().getString(R.string.instruc);
 
-
 		super.setContentView(R.layout.intro);
 /*
 		try{
@@ -175,26 +176,25 @@ public class TouchCalibration extends Activity {
 	}
 
 	@Override
-		public void setContentView(View view) {
-			super.setContentView(view);
-		}
-
-
-	@Override
-		public void onResume(){
-			//Reset the app state since points may not be accurate
-			//Reset to have consecutive points.
-			QUIT = false;
-			STEP = STEP_0;
-			super.setContentView(R.layout.intro);
-			super.onResume();
-		}
+	public void setContentView(View view) {
+		super.setContentView(view);
+	}
 
 	@Override
-		public void onDestroy(){
-			SystemProperties.set("persist.calibration.state","done");
-			super.onDestroy();
-		}
+	public void onResume(){
+		//Reset the app state since points may not be accurate
+		//Reset to have consecutive points.
+		QUIT = false;
+		STEP = STEP_0;
+		super.setContentView(R.layout.intro);
+		super.onResume();
+	}
+
+	@Override
+	public void onDestroy(){
+		SystemProperties.set("persist.calibration.state","done");
+		super.onDestroy();
+	}
 
 	public float checkPointer(int posFlag, float pos) {
 		float retPos = 0;
@@ -211,7 +211,8 @@ public class TouchCalibration extends Activity {
 	/*
 	 * Catch and handle Touch events from the device
 	 */
-	@Override public boolean onTouchEvent(MotionEvent event) {
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
 		final int eventAction = event.getAction();
 		
 		Log.e(TAG,"Touch event = " + eventAction + "  STEP = " + STEP);
@@ -227,7 +228,6 @@ public class TouchCalibration extends Activity {
 	*/
 
 		if (eventAction == MotionEvent.ACTION_UP){
-
 	        if(STEP == STEP_0 ){
             	STEP = STEP_1;
 	            Orientation = getResources().getConfiguration().orientation;
@@ -289,10 +289,10 @@ public class TouchCalibration extends Activity {
 
 					int[] params = new int[20];
 					for (int i =0; i < (params.length / 2); i+=2){
-						params[i] = (int)mResultPts[i]; //x
-						params[i+1] = (int)mResultPts[i+1]; //y
-						params[i+10] = (int) mPts_ref[i]; //reference x
-						params[i+11] = (int) mPts_ref[i+1]; // reference y
+						params[i] = (int)mResultPts[i]; 	// x
+						params[i+1] = (int)mResultPts[i+1]; // y
+						params[i+10] = (int) mPts_ref[i];	// reference x
+						params[i+11] = (int) mPts_ref[i+1];	// reference y
 
 						Log.d(TAG," debug, X[" + Integer.toString(i) + "] is="
 								+ Integer.toString((int)mResultPts[i]));
@@ -304,41 +304,41 @@ public class TouchCalibration extends Activity {
 								+ Integer.toString((int)mPts[i+1]));
 					}
 
-					boolean confirm = false;
+					if (CHK_PTS == true) {
 
-					// Check PTS
-					// 1'st : compare x[0] and x[6]
-					if ((((mResultPts[0]-mResultPts[6]) >= 0) && ((mResultPts[0]-mResultPts[6]) < 20)) || (((mResultPts[6]-mResultPts[0]) >= 0) && ((mResultPts[6]-mResultPts[0]) < 20))) {
-						// 2'nd : compare x[2] and x[4]
-						if ((((mResultPts[2]-mResultPts[4]) >= 0) && ((mResultPts[2]-mResultPts[4]) < 20)) || (((mResultPts[4]-mResultPts[2]) >= 0) && ((mResultPts[4]-mResultPts[2]) < 20))) {
-							// 3'rd : compare y[1] and y[3]
-							if ((((mResultPts[1]-mResultPts[3]) >= 0) && ((mResultPts[1]-mResultPts[3]) < 20)) || (((mResultPts[3]-mResultPts[1]) >= 0) && ((mResultPts[3]-mResultPts[1]) < 20))) {
-								// 4'th : compare y[5] and y[7]
-								if ((((mResultPts[5]-mResultPts[7]) >= 0) && ((mResultPts[5]-mResultPts[7]) < 20)) || (((mResultPts[7]-mResultPts[5]) >= 0) && ((mResultPts[7]-mResultPts[5]) < 20))) {
-									// 5'th : compare x[8] and refX[8]
-									if ( (((mResultPts[8]-mPts[8]) >= 0) && ((mResultPts[8]-mPts[8]) < 20)) || (((mPts[8]-mResultPts[8]) >= 0) && ((mPts[8]-mResultPts[8]) < 20))) {
-										// 6'th : compare y[9] and refY[9]
-										if ( (((mResultPts[9]-mPts[9]) >= 0) && ((mResultPts[9]-mPts[9]) < 20)) || (((mPts[9]-mResultPts[9]) >= 0) && ((mPts[9]-mResultPts[9]) < 20)))
-											confirm = true;
+						// Check PTS
+						// 1'st : compare x[0] and x[6]
+						if ((((mResultPts[0]-mResultPts[6]) >= 0) && ((mResultPts[0]-mResultPts[6]) < 20)) || (((mResultPts[6]-mResultPts[0]) >= 0) && ((mResultPts[6]-mResultPts[0]) < 20))) {
+							// 2'nd : compare x[2] and x[4]
+							if ((((mResultPts[2]-mResultPts[4]) >= 0) && ((mResultPts[2]-mResultPts[4]) < 20)) || (((mResultPts[4]-mResultPts[2]) >= 0) && ((mResultPts[4]-mResultPts[2]) < 20))) {
+								// 3'rd : compare y[1] and y[3]
+								if ((((mResultPts[1]-mResultPts[3]) >= 0) && ((mResultPts[1]-mResultPts[3]) < 20)) || (((mResultPts[3]-mResultPts[1]) >= 0) && ((mResultPts[3]-mResultPts[1]) < 20))) {
+									// 4'th : compare y[5] and y[7]
+									if ((((mResultPts[5]-mResultPts[7]) >= 0) && ((mResultPts[5]-mResultPts[7]) < 20)) || (((mResultPts[7]-mResultPts[5]) >= 0) && ((mResultPts[7]-mResultPts[5]) < 20))) {
+										// 5'th : compare x[8] and refX[8]
+										if ( (((mResultPts[8]-mPts[8]) >= 0) && ((mResultPts[8]-mPts[8]) < 20)) || (((mPts[8]-mResultPts[8]) >= 0) && ((mPts[8]-mResultPts[8]) < 20))) {
+											// 6'th : compare y[9] and refY[9]
+											if ( (((mResultPts[9]-mPts[9]) >= 0) && ((mResultPts[9]-mPts[9]) < 20)) || (((mPts[9]-mResultPts[9]) >= 0) && ((mPts[9]-mResultPts[9]) < 20)))
+												confirm = true;
+										}
 									}
 								}
 							}
 						}
 					}
 
-
 					try{
-
-						if (confirm == true)
+						if (CHK_PTS == true) {
+							if (confirm == true)
+								fos = this.openFileOutput("pointercal", MODE_WORLD_READABLE);
+						} else
 							fos = this.openFileOutput("pointercal", MODE_WORLD_READABLE);
 
 						String rawValues = new String();
 
 						for (int i =0; i < params.length; i++){
-
 							if((Orientation == 2 && Rotation == 0) || (Orientation == 2 && Rotation == 1))
 								Windex = i;
-
 
 							if((Orientation == 1 && Rotation == 1) || (Orientation == 1 && Rotation == 2))
 							{
@@ -378,8 +378,16 @@ public class TouchCalibration extends Activity {
 						}
 
 						// Save data
-						if (confirm == true)
+						if (CHK_PTS == true) {
+							if (confirm == true) {
+								Log.d(TAG, "Save raw data...");
+								fos.write(rawValues.getBytes());
+							} else
+								Log.e(TAG, "Incorrectly raw data, Do not save...");
+						} else {
+							Log.d(TAG, "Save raw data...");
 							fos.write(rawValues.getBytes());
+						}
 					}
 					catch (Exception e){
 						Log.e(TAG, "Exception Occured: Trying to change to World Readable: " +
@@ -391,35 +399,41 @@ public class TouchCalibration extends Activity {
 					if (fos != null){
 						try{fos.close();}catch(Exception e){
 							Log.d("TAG", "Exception Occured While Trying to Close and Save "
-									+ e.toString());
+								+ e.toString());
 						};
 					}	
 
 					SystemProperties.set("persist.calibration.state","done");
 					this.finish();
 					super.finish();
-
 					char[] pointercalBuffer = new char[100];
 					String pointercalValues = "";
 					int count;
-
 					try{
-						if (confirm == true) {
-							FileReader rd = new FileReader(TouchCalibration.filePath);
-							count = rd.read(pointercalBuffer, 0, 100);
-							for(int i=0; i<count; i++){
-								pointercalValues += pointercalBuffer[i];
+						if (CHK_PTS == true) {
+							if (confirm == true) {
+								FileReader rd = new FileReader(TouchCalibration.filePath);
+								count = rd.read(pointercalBuffer, 0, 100);
+								for(int i=0; i<count; i++){
+									pointercalValues += pointercalBuffer[i];
+								}
+								Log.i("This is the pointercal", pointercalValues);
+								rd.close();
 							}
-							Log.i("This is the pointercal", pointercalValues);
-							rd.close();
+						} else {
+	                        FileReader rd = new FileReader(TouchCalibration.filePath);
+	                        count = rd.read(pointercalBuffer, 0, 100);
+    	                    for(int i=0; i<count; i++){
+		                        pointercalValues += pointercalBuffer[i];
+	                        }
+                        Log.i("This is the pointercal", pointercalValues);
+                        rd.close();
 						}
 					}
 					catch(Exception e){
-						Log.e(TAG,
-								"Pointercal file unable to be created correctly:" + e.toString());
+						Log.e(TAG, "Pointercal file unable to be created correctly:" + e.toString());
 					}
-				}
-				else
+				} else
 					super.setContentView(new CalibrationView(this));
 			}
 		}
@@ -475,18 +489,16 @@ public class TouchCalibration extends Activity {
 				mPts[5] = cHeight / 2;
 			}
 			else if(mPtCount == 5){
-
 				//Points are suggested by tslib
-
-				mPts[0] = 50;             // Top Left
+				mPts[0] = 50;           // Top Left
 				mPts[1] = 50;
-				mPts[2] = cWidth - 50; //Top Right
+				mPts[2] = cWidth - 50;	//Top Right
 				mPts[3] = 50;
-				mPts[4] = cWidth - 50; // Bot Right
+				mPts[4] = cWidth - 50;	// Bot Right
 				mPts[5] = cHeight - 50;
-				mPts[6] = 50;             // Bot Left
+				mPts[6] = 50;           // Bot Left
 				mPts[7] = cHeight - 50;
-				mPts[8] = cWidth / 2; // Center
+				mPts[8] = cWidth / 2;	// Center
 				mPts[9] = cHeight / 2;
 
 				if(Rotation == 0){
@@ -537,7 +549,6 @@ public class TouchCalibration extends Activity {
 					mPts_ref[8] = cHeight/2;
 					mPts_ref[9] = cWidth/2;
 				}
-
 			}
 		}
 
@@ -642,7 +653,6 @@ public class TouchCalibration extends Activity {
 					- 28, tempPts[1], paint);
 			canvas.drawLine(tempPts[0], tempPts[1] + 28, tempPts[0],
 					tempPts[1] - 28, paint);
-
 		}
 	}
 }
