@@ -108,9 +108,9 @@ public class TouchCalibration extends Activity {
     /*
      * File Creation for storing the calibration file
      */
-   	public static final String filePath = "/data/data/touchscreen.calibration/files/pointercal";
-    private final File calibrationFile = new File(filePath);
-    protected FileWriter fileWriter;
+	public static final String filePath = "/data/data/touchscreen.calibration/files/pointercal";
+	private final File calibrationFile = new File(filePath);
+	protected FileWriter fileWriter;
 
     private FileOutputStream fos;
 
@@ -118,9 +118,12 @@ public class TouchCalibration extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+		// Disable immersive mode
+		setImmersive(true);
+
         // Remove title area
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-		//getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+		//getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
         //                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		/*
@@ -143,19 +146,18 @@ public class TouchCalibration extends Activity {
 				if( (visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0 ){
 					decorView.setSystemUiVisibility(flags);
 				}
-	
 			}
 
 		});
 
-		SystemProperties.set("persist.calibration.state","start");
+//		SystemProperties.set("persist.calibration.state","start");
 
 		// Get the Text from R.string
 		mQuitString = getApplicationContext().getString(R.string.quit);
 		mPreInstruc = getApplicationContext().getString(R.string.instruc);
 
-
 		super.setContentView(R.layout.intro);
+
 /*
 		try{
 			byte[] defaultPointercal = new byte[20];
@@ -196,46 +198,47 @@ public class TouchCalibration extends Activity {
 			super.onDestroy();
 		}
 
-	public float checkPointer(int posFlag, float pos) {
-		float retPos = 0;
+		public float checkPointer(int posFlag, float pos) {
+			float retPos = 0;
 
-//		if ((pos <= (tempPts[posFlag] + 25)) && (pos >= (tempPts[posFlag] - 25)))
-			retPos =  pos;
-//		else
-//			retPos = tempPts[posFlag];
+//			if ((pos <= (tempPts[posFlag] + 25)) && (pos >= (tempPts[posFlag] - 25)))
+				retPos =  pos;
+//			else
+//				retPos = tempPts[posFlag];
 
-		Log.d(TAG, "tempPts["+posFlag+"] = " + tempPts[posFlag]+" | retPos = " + retPos);
+			Log.d(TAG, "tempPts["+posFlag+"] = " + tempPts[posFlag]+" | retPos = " + retPos);
 
-		return retPos;
-	}
+			return retPos;
+		}
+
 	/*
 	 * Catch and handle Touch events from the device
 	 */
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		final int eventAction = event.getAction();
-		
+
 		Log.e(TAG,"Touch event = " + eventAction + "  STEP = " + STEP);
-	/*	
+	/*
 		if(STEP == STEP_0 ){
 			STEP = STEP_1;
             Orientation = getResources().getConfiguration().orientation;
             Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
 
             super.setContentView(new CalibrationView(this));
-			
+
 		}
 	*/
 
 		if (eventAction == MotionEvent.ACTION_UP){
 
 	        if(STEP == STEP_0 ){
-            	STEP = STEP_1;
-	            Orientation = getResources().getConfiguration().orientation;
-    	        Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
+				STEP = STEP_1;
+				Orientation = getResources().getConfiguration().orientation;
+				Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
 
-        	    super.setContentView(new CalibrationView(this));
+				super.setContentView(new CalibrationView(this));
 				return true;
-        	}
+			}
 
 			Log.d(TAG, "Display rotation = " + Rotation);
 			if (STEP != STEP_0){
@@ -326,7 +329,6 @@ public class TouchCalibration extends Activity {
 						}
 					}
 
-
 					try{
 
 						if (confirm == true)
@@ -342,7 +344,7 @@ public class TouchCalibration extends Activity {
 
 							if((Orientation == 1 && Rotation == 1) || (Orientation == 1 && Rotation == 2))
 							{
-								if(i==6) Windex = 0; else if(i==7) Windex = 1; 
+								if(i==6) Windex = 0; else if(i==7) Windex = 1;
 								else if(i==16) Windex = 10; else if(i==17) Windex = 11;
 								else if(i>7 && i<10) Windex = i; else if(i>17) Windex = i;
 								else
@@ -393,7 +395,7 @@ public class TouchCalibration extends Activity {
 							Log.d("TAG", "Exception Occured While Trying to Close and Save "
 									+ e.toString());
 						};
-					}	
+					}
 
 					SystemProperties.set("persist.calibration.state","done");
 					this.finish();
@@ -570,12 +572,14 @@ public class TouchCalibration extends Activity {
 				Log.d("***Canvas width *** ", Integer.toString(CanvasWidth));
 			}
 
+			SystemProperties.set("persist.calibration.state","start");
+
 			//Build Points
 
 			//Orientation = getResources().getConfiguration().orientation;
 			//Rotation = this.getWindowManager().getDefaultDisplay().getRotation();
 
-			//if(Rotation == 0 || Rotation == 2) 
+			//if(Rotation == 0 || Rotation == 2)
 			//    buildCalibrationPoints(CanvasWidth, CanvasHeight);
 			//else
 			buildCalibrationPoints(CanvasHeight, CanvasWidth);
@@ -642,7 +646,6 @@ public class TouchCalibration extends Activity {
 					- 28, tempPts[1], paint);
 			canvas.drawLine(tempPts[0], tempPts[1] + 28, tempPts[0],
 					tempPts[1] - 28, paint);
-
 		}
 	}
 }

@@ -73,7 +73,7 @@ public class StartupIntentReceiver extends BroadcastReceiver {
              Log.i("Calibration Start Up Receiver", "Calibration File Exists Skipping Launch Of TS Cal");
          }
          catch(Exception e){
-		 	
+
 			Log.i("Calibration Start Up Receiver", "Calibration File Does Not Exist, setting default TS Cal");
          };
     }
