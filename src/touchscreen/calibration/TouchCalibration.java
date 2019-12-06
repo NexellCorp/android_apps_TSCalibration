@@ -332,7 +332,9 @@ public class TouchCalibration extends Activity {
 					try{
 
 						if (confirm == true)
-							fos = this.openFileOutput("pointercal", MODE_WORLD_READABLE);
+							fos = this.openFileOutput("pointercal", MODE_PRIVATE);
+						else
+							Log.e(TAG, "wrong points are touched");
 
 						String rawValues = new String();
 
